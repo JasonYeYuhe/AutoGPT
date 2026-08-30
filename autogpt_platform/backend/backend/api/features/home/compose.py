@@ -3,6 +3,7 @@ from datetime import datetime
 from backend.api.features.executions.review.model import PendingHumanReviewModel
 from backend.api.features.experts.models import Expert
 from backend.api.features.library.model import LibraryAgentRef
+from backend.api.features.tasks.models import DelegatedTask
 from backend.copilot.briefing.models import BriefingContent
 from backend.copilot.model import ChatSessionInfo
 from backend.data.execution import ExecutionStatus, GraphExecutionMeta
@@ -30,6 +31,7 @@ def compose_home_dashboard(
     timezone_name: str,
     questions: list[ChatSessionInfo] | None = None,
     persisted_briefing: BriefingContent | None = None,
+    open_tasks: list[DelegatedTask] | None = None,
 ) -> HomeDashboardResponse:
     hired = [
         expert
@@ -77,7 +79,9 @@ def compose_home_dashboard(
             agent_by_graph=agent_by_graph,
             persisted=persisted_briefing,
         ),
-        active_tasks=compose_active_tasks(executions, expert_by_id, agent_by_graph),
+        active_tasks=compose_active_tasks(
+            executions, expert_by_id, agent_by_graph, open_tasks
+        ),
         upcoming_tasks=compose_upcoming_tasks(schedules, expert_by_schedule),
         team=compose_team_summary(agents),
         agents=agents,

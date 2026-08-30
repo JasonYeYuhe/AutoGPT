@@ -85,6 +85,10 @@ def home_dependencies(mocker: MockerFixture):
         "backend.api.features.home.service.briefing_db.get_briefing_for_date",
         AsyncMock(return_value=None),
     )
+    mocker.patch(
+        "backend.api.features.home.service.tasks_db.list_open_tasks",
+        AsyncMock(return_value=[]),
+    )
 
 
 def _stored_briefing(**overrides) -> BriefingContent:

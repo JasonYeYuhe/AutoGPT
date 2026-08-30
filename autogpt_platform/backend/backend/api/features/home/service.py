@@ -20,6 +20,7 @@ from backend.copilot.briefing.models import BriefingContent
 from backend.copilot.model import ChatSessionInfo
 from backend.data import briefing as briefing_db
 from backend.data import execution as execution_db
+from backend.data import graph as graph_db
 from backend.data import human_review as review_db
 from backend.data import user as user_db
 from backend.data.credit import get_credit_model
@@ -77,8 +78,9 @@ async def build_home_dashboard(
     )
     # Both depend on the gathered data (graph ids / timezone) but not on each
     # other, so the briefing read costs no extra round-trip.
-    library_refs, persisted_briefing = await asyncio.gather(
+    library_refs, graph_names, persisted_briefing = await asyncio.gather(
         library_db.get_library_agent_refs_by_graph_ids(user_id, graph_ids),
+        _graph_names(user_id=user_id, graph_ids=graph_ids),
         _persisted_briefing(user_id=user_id, timezone_name=data.timezone_name, now=now),
     )
 
@@ -89,6 +91,7 @@ async def build_home_dashboard(
         reviews=data.reviews,
         schedules=data.schedules,
         library_refs=library_refs,
+        graph_names=graph_names,
         cost_summary=data.cost_summary,
         credits_balance=data.credits_balance,
         timezone_name=data.timezone_name,
@@ -96,6 +99,21 @@ async def build_home_dashboard(
         persisted_briefing=persisted_briefing,
         open_tasks=data.open_tasks,
     )
+
+
+async def _graph_names(*, user_id: str, graph_ids: list[str]) -> dict[str, str]:
+    """Graph-level names, the fallback for runs with no library row.
+
+    Fail-soft like schedules: losing this costs a headline its agent name, not
+    the page.
+    """
+    try:
+        return await graph_db.get_graph_names_by_ids(user_id, graph_ids)
+    except Exception:
+        logger.warning(
+            "Home could not load graph names for user %s", user_id[:_LOG_ID_CHARS]
+        )
+        return {}
 
 
 async def _persisted_briefing(

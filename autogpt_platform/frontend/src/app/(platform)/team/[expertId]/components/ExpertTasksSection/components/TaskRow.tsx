@@ -9,7 +9,7 @@ import {
   formatSpend,
   getStatusLabel,
   getStatusVariant,
-} from "../helpers";
+} from "../../../../task-helpers";
 
 interface Props {
   task: DelegatedTask;

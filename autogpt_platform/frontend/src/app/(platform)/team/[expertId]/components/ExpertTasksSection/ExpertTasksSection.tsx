@@ -4,7 +4,7 @@ import { DelegatedTask } from "@/app/api/__generated__/models/delegatedTask";
 import { Skeleton } from "@/components/atoms/Skeleton/Skeleton";
 import { Text } from "@/components/atoms/Text/Text";
 import { ErrorCard } from "@/components/molecules/ErrorCard/ErrorCard";
-import { TaskDetailDrawer } from "./components/TaskDetailDrawer/TaskDetailDrawer";
+import { TaskDetailDrawer } from "../../../components/TaskDetailDrawer/TaskDetailDrawer";
 import { TaskRow } from "./components/TaskRow";
 import { useExpertTasksSection } from "./useExpertTasksSection";
 

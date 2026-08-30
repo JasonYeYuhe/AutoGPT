@@ -2,7 +2,7 @@ import { useListTasks } from "@/app/api/__generated__/endpoints/tasks/tasks";
 import { DelegatedTask } from "@/app/api/__generated__/models/delegatedTask";
 import { okData } from "@/app/api/helpers";
 import { useState } from "react";
-import { isOpenTask } from "./helpers";
+import { isOpenTask } from "../../../task-helpers";
 
 interface Args {
   expertId: string;

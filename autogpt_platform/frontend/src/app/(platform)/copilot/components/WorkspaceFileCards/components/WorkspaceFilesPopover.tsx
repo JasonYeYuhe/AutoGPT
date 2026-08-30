@@ -13,7 +13,7 @@ import { Fragment, useState } from "react";
 import type { SessionFile } from "../../ContextPanel/components/FilesTab/useSessionFiles";
 import { useSessionActivity } from "../useSessionActivity";
 import { useWorkspaceFileCards } from "../useWorkspaceFileCards";
-import { RunsList, SchedulesList } from "./SessionActivityContent";
+import { RunsList, SchedulesList, TasksList } from "./SessionActivityContent";
 import { WorkspaceFilesContent } from "./WorkspaceFilesContent";
 
 // The stack hoists section titles above each card; one popover surface can't,
@@ -125,7 +125,7 @@ function WorkspaceFilesPopoverContent({
     handleConfirmDelete,
     handleDownloadAll,
   } = useWorkspaceFileCards(sessionId);
-  const { runs, schedules } = useSessionActivity(sessionId);
+  const { runs, schedules, tasks } = useSessionActivity(sessionId);
 
   function handleOpenFile(file: SessionFile) {
     handleOpen(file);
@@ -169,6 +169,15 @@ function WorkspaceFilesPopoverContent({
           onCancelDelete={handleCancelDelete}
           onDownloadAll={handleDownloadAll}
         />
+      ),
+    },
+    {
+      key: "tasks",
+      node: tasks.length > 0 && (
+        <>
+          <span className={SECTION_LABEL}>Tasks ({tasks.length})</span>
+          <TasksList tasks={tasks} />
+        </>
       ),
     },
     {

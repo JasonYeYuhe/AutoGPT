@@ -82,7 +82,7 @@ from backend.util.retry import (
 )
 from backend.util.settings import Settings
 
-from . import billing, expert_posts, task_outcomes
+from . import activity_events, billing, expert_posts, task_outcomes
 from .activity_status_generator import (
     INSUFFICIENT_BALANCE_GUIDANCE,
     generate_activity_status_for_execution,
@@ -782,6 +782,12 @@ class ExecutionProcessor:
                 stats=execution_stats,
                 db_client=db_client,
             )
+            if status == ExecutionStatus.COMPLETED:
+                await activity_events.log_node_integration_activity(
+                    node_exec=node_exec,
+                    block=node.block,
+                    db_client=db_client,
+                )
             if not node_exec.execution_context.dry_run:
                 reconciled_delta, _ = await billing.charge_reconciled_usage(
                     node_exec=node_exec,
@@ -1081,6 +1087,9 @@ class ExecutionProcessor:
             # above, which targets the expert's latest thread instead.
             task_outcomes.handle_task_outcome(
                 db_client, graph_exec, exec_meta.status, exec_stats
+            )
+            activity_events.handle_run_completed(
+                db_client, graph_exec, exec_meta, exec_stats
             )
 
             update_graph_execution_state(

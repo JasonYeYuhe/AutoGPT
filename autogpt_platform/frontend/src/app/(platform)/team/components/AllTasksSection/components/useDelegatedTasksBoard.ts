@@ -9,9 +9,12 @@ interface Args {
 }
 
 export function useDelegatedTasksBoard({ enabled, expertId }: Args) {
-  const tasksQuery = useListTasks(expertId ? { expert_id: expertId } : undefined, {
-    query: { select: (res) => okData(res) ?? null, enabled },
-  });
+  const tasksQuery = useListTasks(
+    expertId ? { expert_id: expertId } : undefined,
+    {
+      query: { select: (res) => okData(res) ?? null, enabled },
+    },
+  );
 
   const tasks: DelegatedTask[] = tasksQuery.data ?? [];
 

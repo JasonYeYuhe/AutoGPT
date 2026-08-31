@@ -18,6 +18,7 @@ import {
   ArrowLeft02Icon,
   Calendar03Icon,
   CheckListIcon,
+  PlugSocketIcon,
   Settings01Icon,
   SparklesIcon,
   UserIcon,
@@ -31,6 +32,7 @@ import { SoulDrawer } from "../components/SoulDrawer/SoulDrawer";
 import { getLastRunLabel } from "../helpers";
 import { ExpertAboutSection } from "./components/ExpertAboutSection";
 import { ExpertDetailHeader } from "./components/ExpertDetailHeader";
+import { ExpertIntegrationsSection } from "./components/ExpertIntegrationsSection/ExpertIntegrationsSection";
 import { ExpertSchedulesSection } from "./components/ExpertSchedulesSection";
 import { ExpertSettingsSection } from "./components/ExpertSettingsSection";
 import { ExpertSkillsSection } from "./components/ExpertSkillsSection";
@@ -45,6 +47,7 @@ const TABS = [
   { value: "tasks", label: "Tasks", icon: CheckListIcon },
   { value: "schedules", label: "Schedules", icon: Calendar03Icon },
   { value: "workflows", label: "Workflows", icon: WorkflowSquare01Icon },
+  { value: "integrations", label: "Integrations", icon: PlugSocketIcon },
   { value: "skills", label: "Skills", icon: SparklesIcon },
   { value: "settings", label: "Settings", icon: Settings01Icon },
 ] as const;
@@ -178,6 +181,14 @@ export default function ExpertDetailPage() {
             expert={expert}
             accentIconClass={accent.icon}
             onInstallWorkflow={openPicker}
+          />
+        </TabsLineContent>
+
+        <TabsLineContent value="integrations">
+          <ExpertIntegrationsSection
+            expertId={expert.id}
+            expertName={expert.name}
+            expertAvatarUrl={expert.avatar_url ?? null}
           />
         </TabsLineContent>
 

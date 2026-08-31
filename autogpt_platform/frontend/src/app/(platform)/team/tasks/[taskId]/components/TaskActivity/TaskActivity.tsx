@@ -43,7 +43,10 @@ const EVENT_BADGES: Record<string, Badge> = {
     icon: ArrowDataTransferHorizontalIcon,
     className: "bg-blue-100 text-blue-600",
   },
-  escalation: { icon: HelpCircleIcon, className: "bg-amber-100 text-amber-600" },
+  escalation: {
+    icon: HelpCircleIcon,
+    className: "bg-amber-100 text-amber-600",
+  },
   answer: { icon: Comment01Icon, className: "bg-violet-100 text-violet-600" },
   note: { icon: StickyNote02Icon, className: "bg-zinc-100 text-zinc-500" },
   retry: { icon: RefreshIcon, className: "bg-zinc-100 text-zinc-500" },
@@ -94,33 +97,33 @@ export function TaskActivity({ task }: Props) {
   }));
 
   const eventEntries = events.map((event, index) => {
-      const actor = getTimelineActor(event, task.owner);
-      const quoted = event.question ?? event.note;
-      return {
-        key: `event-${index}`,
-        at: event.at,
-        actor,
-        badge: EVENT_BADGES[event.kind ?? "note"] ?? EVENT_BADGES.note,
-        // An escalation carries the thread its answer is delivered to;
-        // everything else falls back to where the task started.
-        href: getSessionLink(event.session_id ?? task.origin_session_id),
-        header: (
-          <>
-            <span className="font-semibold text-zinc-900">
-              {getActorName(actor)}
-            </span>{" "}
-            <span className="text-zinc-600">{getTimelineVerb(event)}</span>
-          </>
-        ),
-        body: (
-          <>
-            {quoted ? <ActivityQuote text={quoted} /> : null}
-            {index === answerableIndex ? (
-              <ActivityAnswer taskId={task.id} options={event.options ?? []} />
-            ) : null}
-          </>
-        ),
-      };
+    const actor = getTimelineActor(event, task.owner);
+    const quoted = event.question ?? event.note;
+    return {
+      key: `event-${index}`,
+      at: event.at,
+      actor,
+      badge: EVENT_BADGES[event.kind ?? "note"] ?? EVENT_BADGES.note,
+      // An escalation carries the thread its answer is delivered to;
+      // everything else falls back to where the task started.
+      href: getSessionLink(event.session_id ?? task.origin_session_id),
+      header: (
+        <>
+          <span className="font-semibold text-zinc-900">
+            {getActorName(actor)}
+          </span>{" "}
+          <span className="text-zinc-600">{getTimelineVerb(event)}</span>
+        </>
+      ),
+      body: (
+        <>
+          {quoted ? <ActivityQuote text={quoted} /> : null}
+          {index === answerableIndex ? (
+            <ActivityAnswer taskId={task.id} options={event.options ?? []} />
+          ) : null}
+        </>
+      ),
+    };
   });
 
   // The outcome reads in story order, not always last: on a DONE task it is

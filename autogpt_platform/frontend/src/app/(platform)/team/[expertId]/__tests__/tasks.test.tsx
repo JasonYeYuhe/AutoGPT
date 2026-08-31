@@ -145,9 +145,7 @@ describe("Expert Tasks tab", () => {
     await openTasksTab();
 
     await screen.findByRole("table", { name: "Delegated tasks" });
-    expect(
-      screen.queryByRole("columnheader", { name: /owner/i }),
-    ).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: /owner/i })).toBeNull();
   });
 
   test("shows an empty state when the expert has never been delegated to", async () => {
@@ -189,9 +187,7 @@ describe("Expert Tasks tab", () => {
       name: "Delegated tasks",
     });
     const rows = within(table).getAllByRole("row");
-    const hrefs = rows
-      .map((row) => row.getAttribute("href"))
-      .filter(Boolean);
+    const hrefs = rows.map((row) => row.getAttribute("href")).filter(Boolean);
     expect(hrefs).toContain("/team/tasks/task-active");
     expect(hrefs).toContain("/team/tasks/task-done");
   });

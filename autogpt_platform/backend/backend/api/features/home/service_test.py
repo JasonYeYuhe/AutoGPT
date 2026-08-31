@@ -93,6 +93,28 @@ def home_dependencies(mocker: MockerFixture):
         "backend.api.features.home.service.tasks_db.list_open_tasks",
         AsyncMock(return_value=[]),
     )
+    mocker.patch(
+        "backend.api.features.home.service.overseer_db.list_recent_failed_tasks",
+        AsyncMock(return_value=[]),
+    )
+    # The flag-gated sources must be mocked even though the gates default to
+    # off: several tests patch `service.is_feature_enabled` module-wide to
+    # True, which opens these gates too. Left unmocked, they then run real
+    # Prisma queries on this test's function-scoped event loop — the closed
+    # loop leaves a dead connection in the shared engine pool that panics the
+    # query engine when a later (session-loop) test starts a transaction.
+    mocker.patch(
+        "backend.api.features.home.service.chat_db.get_sessions_with_pending_question",
+        AsyncMock(return_value=[]),
+    )
+    mocker.patch(
+        "backend.api.features.home.service.chat_db.get_session_titles",
+        AsyncMock(return_value={}),
+    )
+    mocker.patch(
+        "backend.api.features.home.service.activity_db.list_activity_events",
+        AsyncMock(return_value=[]),
+    )
 
 
 def _stored_briefing(**overrides) -> BriefingContent:

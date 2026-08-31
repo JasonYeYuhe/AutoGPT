@@ -200,11 +200,10 @@ class RejectTaskRequest(BaseModel):
 
 class TaskReviewResult(BaseModel):
     """Outcome of an accept/reject action on a finished task. ``escalated``
-    is set when the revision cap was hit: no new subtask was opened and the
+    is set when the revision cap was hit: the task did not reopen and the
     user is asked to clarify in chat instead."""
 
     task: DelegatedTask
-    revision_task: "DelegatedTask | None" = None
     escalated: bool = False
     message: str
 

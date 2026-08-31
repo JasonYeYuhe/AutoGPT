@@ -220,9 +220,7 @@ def _owner_name(task: DelegatedTask) -> str:
     return task.owner.name if task.owner else "Autopilot"
 
 
-async def _deliver_revision(
-    *, user_id: str, task: DelegatedTask, note: str
-) -> None:
+async def _deliver_revision(*, user_id: str, task: DelegatedTask, note: str) -> None:
     """Nudge the owner's working session with the revision ask. Best-effort,
     mirroring ``_deliver_answer`` — the reopened task already carries the
     revision amendment, so a failed delivery degrades to the owner finding

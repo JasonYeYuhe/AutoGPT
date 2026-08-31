@@ -2,17 +2,23 @@
 
 import json
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from openai.types.chat import ChatCompletionToolParam
 
-from backend.copilot.model import ChatSession
+from backend.copilot.model import ChatSession, PendingQuestion
 from backend.copilot.response_model import StreamToolOutputAvailable
-from backend.data.db_accessors import workspace_db
+from backend.data.db_accessors import chat_db, workspace_db
 from backend.util.truncate import truncate
 from backend.util.workspace import WorkspaceManager
 
-from .models import ErrorResponse, NeedLoginResponse, ToolResponseBase
+from .models import (
+    ErrorResponse,
+    NeedLoginResponse,
+    SetupRequirementsResponse,
+    ToolResponseBase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +113,49 @@ async def _persist_and_summarize(
     )
 
 
+async def mark_session_pending_question(session: ChatSession, text: str) -> None:
+    """Park a question on the session so Home's "Needs You" can surface it.
+
+    Best-effort: a failure here costs the user a "Needs You" row, and must
+    never cost them the answer they were about to be asked for. Cleared by
+    the next user reply in the session.
+    """
+    asked_at = datetime.now(UTC)
+    session.metadata.pending_question = PendingQuestion(text=text, asked_at=asked_at)
+    try:
+        await chat_db().set_session_pending_question(
+            session.session_id, session.user_id, text, asked_at
+        )
+    except Exception as e:
+        logger.warning(
+            "Could not record pending question for session %s: %s",
+            session.session_id,
+            e,
+        )
+
+
+async def _park_missing_credentials(
+    result: ToolResponseBase, session: ChatSession
+) -> None:
+    """Give missing-credential stops the same Home visibility as questions.
+
+    A setup card rendered into an unattended chat (scheduled turn, delegated
+    task, user stepped away) stalls the work invisibly — only
+    ``pending_question`` feeds Home's "Needs You". Piggyback on it whenever a
+    tool reports missing credentials so the block always has a pull surface.
+    """
+    if not isinstance(result, SetupRequirementsResponse):
+        return
+    readiness = result.setup_info.user_readiness
+    if readiness.has_all_credentials or not readiness.missing_credentials:
+        return
+    providers = ", ".join(sorted(readiness.missing_credentials))
+    await mark_session_pending_question(
+        session,
+        f"Connect {providers} to continue — the sign-in card is in this chat.",
+    )
+
+
 class BaseTool:
     """Base class for all chat tools."""
 
@@ -186,6 +235,7 @@ class BaseTool:
 
         try:
             result = await self._execute(user_id, session, **kwargs)
+            await _park_missing_credentials(result, session)
             raw_output = result.model_dump_json(exclude_none=True)
 
             if (

@@ -13,7 +13,7 @@ from backend.api.features.executions.review.model import PendingHumanReviewModel
 from backend.api.features.experts import experts_db
 from backend.api.features.experts.models import Expert
 from backend.api.features.library import db as library_db
-from backend.api.features.tasks import tasks_db
+from backend.api.features.tasks import overseer_db, tasks_db
 from backend.api.features.tasks.models import DelegatedTask
 from backend.copilot import db as chat_db
 from backend.copilot.briefing.models import BriefingContent
@@ -56,6 +56,7 @@ class HomeSourceData(BaseModel):
     credits_balance: int | None
     questions: list[ChatSessionInfo]
     open_tasks: list[DelegatedTask]
+    failed_tasks: list[DelegatedTask]
     timezone_name: str
 
 
@@ -98,6 +99,7 @@ async def build_home_dashboard(
         questions=data.questions,
         persisted_briefing=persisted_briefing,
         open_tasks=data.open_tasks,
+        failed_tasks=data.failed_tasks,
     )
 
 
@@ -195,6 +197,7 @@ async def _load_home_source_data(
     )
     questions_task = asyncio.create_task(_get_pending_questions(user_id=user_id))
     open_tasks_task = asyncio.create_task(_get_open_tasks(user_id=user_id))
+    failed_tasks_task = asyncio.create_task(_get_failed_tasks(user_id=user_id, now=now))
     user_task = asyncio.create_task(user_db.get_user_by_id(user_id))
     # Gather rather than awaiting one by one: a failure in the first task would
     # otherwise leave the rest detached with their exceptions never retrieved.
@@ -207,6 +210,7 @@ async def _load_home_source_data(
         credits_task,
         questions_task,
         open_tasks_task,
+        failed_tasks_task,
         user_task,
     ]
     await asyncio.gather(*started)
@@ -222,6 +226,7 @@ async def _load_home_source_data(
         credits_balance=credits_task.result(),
         questions=questions_task.result(),
         open_tasks=open_tasks_task.result(),
+        failed_tasks=failed_tasks_task.result(),
         timezone_name=get_user_timezone_or_utc(user.timezone if user else None),
     )
 
@@ -251,6 +256,20 @@ async def _get_open_tasks(*, user_id: str) -> list[DelegatedTask]:
     except Exception:
         logger.warning(
             "Home could not load open tasks for user %s", user_id[:_LOG_ID_CHARS]
+        )
+        return []
+
+
+async def _get_failed_tasks(*, user_id: str, now: datetime) -> list[DelegatedTask]:
+    # Recently FAILED tasks feed the "failed after retry" attention card.
+    # Fail-soft like open tasks: losing them costs a card, not the page.
+    try:
+        return await overseer_db.list_recent_failed_tasks(
+            user_id, since=now - timedelta(days=3)
+        )
+    except Exception:
+        logger.warning(
+            "Home could not load failed tasks for user %s", user_id[:_LOG_ID_CHARS]
         )
         return []
 

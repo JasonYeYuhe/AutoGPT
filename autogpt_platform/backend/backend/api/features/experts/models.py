@@ -149,6 +149,9 @@ class ExpertPod(BaseModel):
     id: str
     name: str
     created_at: datetime
+    # The member who fronts the pod: delegations aimed at the pod (or at a
+    # member, from outside it) are routed to the lead. None = no lead set.
+    lead_expert_id: str | None = None
 
 
 class ExpertRun(BaseModel):
@@ -173,6 +176,9 @@ class ExpertDetachPreview(BaseModel):
 
     schedule_names: list[str]
     trigger_names: list[str]
+    # Open delegated tasks the expert still holds; archiving reassigns them
+    # to Autopilot. Defaulted so stale clients keep validating.
+    open_task_count: int = 0
 
 
 class HireResult(BaseModel):

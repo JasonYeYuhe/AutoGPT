@@ -33,6 +33,7 @@ def compose_home_dashboard(
     questions: list[ChatSessionInfo] | None = None,
     persisted_briefing: BriefingContent | None = None,
     open_tasks: list[DelegatedTask] | None = None,
+    failed_tasks: list[DelegatedTask] | None = None,
 ) -> HomeDashboardResponse:
     hired = [
         expert
@@ -73,6 +74,7 @@ def compose_home_dashboard(
             credits_balance=credits_balance,
             questions=questions,
             tasks=open_tasks,
+            failed_tasks=failed_tasks,
         ),
         briefing=compose_briefing(
             now=now,
